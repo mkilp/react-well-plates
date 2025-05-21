@@ -1,11 +1,15 @@
 import React, {
-  CSSProperties,
   FunctionComponent,
-  SyntheticEvent,
   useMemo,
   useCallback,
   ReactNode,
 } from 'react';
+import {
+  ViewStyle,
+  // TextStyle, // Only if headerStyle specifically needs to return TextStyle and not just ViewStyle for the container
+  StyleProp,
+  GestureResponderEvent,
+} from 'react-native';
 import {
   WellPlate as WellPlateClass,
   PositionFormat,
@@ -13,7 +17,7 @@ import {
 } from 'well-plates';
 
 import { WellPlateInternal } from './util/WellPlateInternal';
-import { IWellPlateCommonProps } from './util/types';
+import { IWellPlateCommonProps } from './util/types'; // Assuming this is RN compatible or doesn't have web types
 
 export interface Cell {
   index: number;
@@ -33,43 +37,32 @@ export interface IWellPlateProps extends IWellPlateCommonProps {
   format?: PositionFormat;
   displayAsGrid?: boolean;
 
-  wellClassName?: (cell: Cell) => string | undefined;
+  // wellClassName removed
   renderText?: (cell: Cell) => ReactNode;
-  wellStyle?: (cell: Cell) => CSSProperties;
+  wellStyle?: (cell: Cell) => StyleProp<ViewStyle>;
 
-  headerClassName?: (cell: HeaderCell) => string | undefined;
-  headerStyle?: (cell: HeaderCell) => CSSProperties;
+  // headerClassName removed
+  headerStyle?: (cell: HeaderCell) => StyleProp<ViewStyle>; // Keeping as ViewStyle for container
   headerText?: (cell: HeaderCell) => ReactNode;
 
   onClick?: (
     value: number,
     label: string,
     wellPlate: WellPlateClass,
-    e: React.MouseEvent,
+    e: GestureResponderEvent,
   ) => void;
-  onEnter?: (
-    value: number,
-    label: string,
-    wellPlate: WellPlateClass,
-    e: SyntheticEvent,
-  ) => void;
-  onLeave?: (
-    value: number,
-    label: string,
-    wellPlate: WellPlateClass,
-    e: SyntheticEvent,
-  ) => void;
+  // onEnter and onLeave removed
   onMouseDown?: (
     value: number,
     label: string,
     wellPlate: WellPlateClass,
-    e: React.MouseEvent,
+    e: GestureResponderEvent,
   ) => void;
   onMouseUp?: (
     value: number,
     label: string,
     wellPlate: WellPlateClass,
-    e: React.MouseEvent,
+    e: GestureResponderEvent,
   ) => void;
 }
 
@@ -81,12 +74,13 @@ export const WellPlate: FunctionComponent<IWellPlateProps> = (props) => {
     onClick,
     onMouseDown,
     onMouseUp,
-    onLeave,
-    onEnter,
+    // onLeave, // Removed
+    // onEnter, // Removed
     wellStyle,
-    wellClassName,
+    // wellClassName, // Removed
     renderText: text,
     headerStyle,
+    // headerClassName, // Removed
     ...otherProps
   } = props;
 
@@ -95,7 +89,7 @@ export const WellPlate: FunctionComponent<IWellPlateProps> = (props) => {
   }, [rows, columns, format]);
 
   const onClickCallback = useCallback(
-    (value: number, e: React.MouseEvent) => {
+    (value: number, e: GestureResponderEvent) => {
       const label = wellPlate.getPosition(value, 'formatted');
       if (onClick) onClick(value, label, wellPlate, e);
     },
@@ -103,73 +97,55 @@ export const WellPlate: FunctionComponent<IWellPlateProps> = (props) => {
   );
 
   const onMouseDownCallback = useCallback(
-    (value: number, e: React.MouseEvent) => {
+    (value: number, e: GestureResponderEvent) => {
       const label = wellPlate.getPosition(value, 'formatted');
       if (onMouseDown) onMouseDown(value, label, wellPlate, e);
     },
     [onMouseDown, wellPlate],
   );
 
-  const onLeaveCallback = useCallback(
-    (value: number, e: React.SyntheticEvent) => {
+  const onMouseUpCallback = useCallback( // Added this callback for completeness, though not in original snippet's destructuring
+    (value: number, e: GestureResponderEvent) => {
       const label = wellPlate.getPosition(value, 'formatted');
-      if (onLeave) onLeave(value, label, wellPlate, e);
+      // Assuming onMouseUp prop exists and is being passed through otherProps or needs to be explicitly handled
+      if (props.onMouseUp) props.onMouseUp(value, label, wellPlate, e);
     },
-    [onLeave, wellPlate],
+    [props.onMouseUp, wellPlate],
   );
 
-  const onEnterCallback = useCallback(
-    (value: number, e: React.SyntheticEvent) => {
-      const label = wellPlate.getPosition(value, 'formatted');
-      if (onEnter) onEnter(value, label, wellPlate, e);
-    },
-    [onEnter, wellPlate],
-  );
 
   const wellStyleCallback = useCallback(
-    (index: number): CSSProperties => {
+    (index: number): StyleProp<ViewStyle> => {
       const label = wellPlate.getPosition(index, 'formatted');
       const position = wellPlate.getPosition(index, 'row_column');
-
-      return {
-        userSelect: 'text',
-        WebkitUserSelect: 'text',
-        ...wellStyle?.({ index, label, wellPlate, position }),
-      };
+      const cell: Cell = { index, label, wellPlate, position };
+      // userSelect and WebkitUserSelect removed
+      return wellStyle?.(cell) || {}; // Return empty object if no style is provided
     },
     [wellStyle, wellPlate],
   );
 
   const headerStyleCallback = useCallback(
-    (cell: HeaderCell): CSSProperties => {
-      return {
-        userSelect: 'text',
-        WebkitUserSelect: 'text',
-        ...headerStyle?.(cell),
-      };
+    (cell: HeaderCell): StyleProp<ViewStyle> => {
+      // userSelect and WebkitUserSelect removed
+      return headerStyle?.(cell) || {}; // Return empty object if no style is provided
     },
     [headerStyle],
   );
 
-  const wellClassNameCallback = useCallback(
-    (index: number) => {
-      const label = wellPlate.getPosition(index, 'formatted');
-      const position = wellPlate.getPosition(index, 'row_column');
-
-      if (wellClassName) {
-        return wellClassName({ index, label, wellPlate, position });
-      }
-    },
-    [wellClassName, wellPlate],
-  );
+  // wellClassNameCallback removed
 
   const textCallback = useCallback(
     (index: number) => {
       const label = wellPlate.getPosition(index, 'formatted');
       const position = wellPlate.getPosition(index, 'row_column');
+      const cell: Cell = { index, label, wellPlate, position };
 
-      if (text) return text({ index, label, wellPlate, position });
-      return label;
+      if (text) return text(cell);
+      // Default behavior in WellPlateInternal is to show formatted position if text() is undefined.
+      // Here, if text prop is provided, we call it. If not, WellPlateInternal handles default.
+      // So, we can return undefined if text prop is not given, or text(cell) if it is.
+      return text ? text(cell) : undefined; // Let WellPlateInternal handle default text
     },
     [text, wellPlate],
   );
@@ -180,11 +156,12 @@ export const WellPlate: FunctionComponent<IWellPlateProps> = (props) => {
       onClick={onClickCallback}
       text={textCallback}
       onMouseDown={onMouseDownCallback}
-      onLeave={onLeaveCallback}
-      onEnter={onEnterCallback}
+      onMouseUp={onMouseUpCallback} // Pass the new onMouseUpCallback
+      // onLeave and onEnter props removed from WellPlateInternal
       wellStyle={wellStyleCallback}
-      wellClassName={wellClassNameCallback}
+      // wellClassName prop removed from WellPlateInternal
       headerStyle={headerStyleCallback}
+      // headerClassName prop removed from WellPlateInternal
       {...otherProps}
     />
   );

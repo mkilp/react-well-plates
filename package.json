@@ -16,14 +16,13 @@
     "check-types": "tsc --noEmit",
     "clean": "rimraf lib lib-es",
     "prepack": "npm run build",
-    "dev": "storybook dev",
-    "build-storybook": "storybook build",
+    "dev": "echo \"React Native dev script TBD\"",
     "eslint": "eslint .",
     "eslint-fix": "npm run eslint -- --fix",
     "prettier": "prettier --check .",
     "prettier-write": "prettier --write .",
     "test": "npm run eslint && npm run check-types && npm run prettier",
-    "storybook": "storybook dev -p 6006"
+    "storybook": "echo \"React Native storybook script TBD\""
   },
   "repository": {
     "type": "git",
@@ -37,25 +36,21 @@
   },
   "homepage": "https://github.com/zakodium-oss/react-well-plates#readme",
   "peerDependencies": {
-    "react": ">=16.0.0",
-    "react-dom": ">=16.0.0"
+    "react": "^19.0.0"
   },
   "devDependencies": {
-    "@storybook/addon-essentials": "^8.2.8",
-    "@storybook/addon-links": "^8.2.8",
-    "@storybook/addon-storysource": "^8.2.8",
-    "@storybook/blocks": "^8.2.8",
-    "@storybook/react": "^8.2.8",
-    "@storybook/react-vite": "^8.2.8",
-    "@storybook/test": "^8.2.8",
-    "@types/react": "^17.0.50",
+    "@storybook/addon-ondevice-actions": "^8.1.0",
+    "@storybook/addon-ondevice-controls": "^8.1.0",
+    "@storybook/react-native": "^8.6.4",
+    "@storybook/react-native-server": "^8.6.4",
+    "@types/react": "^19.0.0",
     "eslint": "^8.47.0",
     "eslint-config-zakodium": "^12.0.0",
     "prettier": "^3.3.3",
-    "react": "^17.0.2",
-    "react-dom": "^17.0.2",
-    "storybook": "^8.2.8",
-    "typescript": "^5.5.4"
+    "react": "^19.0.0",
+    "react-native": "^0.79.2",
+    "react-test-renderer": "^19.0.0",
+    "typescript": "^5.0.4"
   },
   "dependencies": {
     "well-plates": "^6.0.3"

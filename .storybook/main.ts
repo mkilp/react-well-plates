@@ -1,26 +1,11 @@
-import type { StorybookConfig } from '@storybook/react-vite';
-
-const config: StorybookConfig = {
-  stories: [
-    '../stories/**/*.mdx',
-    '../stories/**/*.stories.@(js|jsx|mjs|ts|tsx)',
-  ],
-
+// Using a generic type for the config object for simplicity with v8
+// as specific StorybookConfig types can sometimes be tied to web frameworks.
+const config = {
+  stories: ['../stories/**/*.stories.?(ts|tsx|js|jsx|mjs)'],
   addons: [
-    '@storybook/addon-storysource',
-    '@storybook/addon-links',
-    '@storybook/addon-essentials',
+    '@storybook/addon-ondevice-controls',
+    '@storybook/addon-ondevice-actions',
   ],
-
-  framework: {
-    name: '@storybook/react-vite',
-    options: {},
-  },
-
-  docs: {},
-
-  typescript: {
-    reactDocgen: 'react-docgen-typescript',
-  },
 };
+
 export default config;

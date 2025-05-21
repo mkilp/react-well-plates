@@ -1,9 +1,14 @@
-import React, {
-  ReactNode,
-  CSSProperties,
-  FunctionComponent,
-  SyntheticEvent,
-} from 'react';
+import React, { ReactNode, FunctionComponent } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  GestureResponderEvent,
+  ViewStyle,
+  StyleProp,
+  TextStyle,
+} from 'react-native';
 import { WellPlate } from 'well-plates';
 
 interface IWellProps {
@@ -11,57 +16,98 @@ interface IWellProps {
   value: number;
   wellPlate: WellPlate;
   text?: (index: number) => ReactNode;
-  onClick?: (value: number, e: React.MouseEvent) => void;
-  onEnter?: (value: number, e: SyntheticEvent) => void;
-  onLeave?: (value: number, e: SyntheticEvent) => void;
-  onMouseUp?: (value: number, e: React.MouseEvent) => void;
-  onMouseDown?: (value: number, e: React.MouseEvent) => void;
-  style?: CSSProperties;
-  className?: string;
+  onClick?: (value: number, e: GestureResponderEvent) => void;
+  // onEnter and onLeave are omitted as they don't have direct Pressable equivalents.
+  // This is a deviation from the original web component.
+  onMouseUp?: (value: number, e: GestureResponderEvent) => void;
+  onMouseDown?: (value: number, e: GestureResponderEvent) => void;
+  style?: StyleProp<ViewStyle>;
+  // textStyle prop can be added if specific text styling is needed independent of the well's container style
+  textStyle?: StyleProp<TextStyle>;
 }
 
-const wellStyle: CSSProperties = {
-  borderRadius: '50%',
-  borderWidth: 1,
-  borderStyle: 'solid',
-  display: 'flex',
-  alignItems: 'center',
-  textAlign: 'center',
-};
-
 const Well: FunctionComponent<IWellProps> = (props) => {
-  const { size, style: customStyles } = props;
+  const {
+    size,
+    value,
+    wellPlate,
+    text,
+    onClick,
+    onMouseDown,
+    onMouseUp,
+    style: customStyle,
+    textStyle: customTextStyle,
+  } = props;
 
   const wellMargin = Math.round(size / 12);
-  const style = {
-    ...wellStyle,
-    width: size - 2 * wellMargin,
-    height: size - 2 * wellMargin,
+  const wellDiameter = size - 2 * wellMargin;
+
+  const dynamicWellStyle: ViewStyle = {
+    width: wellDiameter,
+    height: wellDiameter,
     margin: wellMargin,
-    ...customStyles,
+    borderRadius: wellDiameter / 2, // For a perfect circle
   };
 
-  const displayableValue = props.text(props.value);
+  // Extract backgroundColor for the well and color for the text from customStyle if it's an object
+  let backgroundColor: string | undefined;
+  let textColor: string | undefined;
+
+  if (StyleSheet.flatten(customStyle)?.backgroundColor) {
+    backgroundColor = StyleSheet.flatten(customStyle).backgroundColor as string;
+  }
+  if (StyleSheet.flatten(customStyle)?.color) {
+    textColor = StyleSheet.flatten(customStyle).color as string;
+  }
+  
+  // If customTextStyle provides color, it takes precedence for the text
+  if (StyleSheet.flatten(customTextStyle)?.color) {
+    textColor = StyleSheet.flatten(customTextStyle).color as string;
+  }
+
+
+  const displayableValue = text
+    ? text(value)
+    : wellPlate.getPosition(value, 'formatted');
 
   return (
-    <div
-      onClick={props.onClick && ((e) => props.onClick(props.value, e))}
-      onMouseEnter={props.onEnter && ((e) => props.onEnter(props.value, e))}
-      onMouseLeave={props.onLeave && ((e) => props.onLeave(props.value, e))}
-      onMouseUp={props.onMouseUp && ((e) => props.onMouseUp(props.value, e))}
-      onMouseDown={
-        props.onMouseDown && ((e) => props.onMouseDown(props.value, e))
-      }
-      className={props.className}
-      style={style}
+    <Pressable
+      onPress={onClick && ((e) => onClick(value, e))}
+      onPressIn={onMouseDown && ((e) => onMouseDown(value, e))}
+      onPressOut={onMouseUp && ((e) => onMouseUp(value, e))}
+      style={[
+        styles.baseWell,
+        dynamicWellStyle,
+        backgroundColor ? { backgroundColor } : {}, // Apply backgroundColor here
+        customStyle, // Allow full override and other properties like borderColor
+      ]}
     >
-      <div style={{ width: '100%' }}>
-        {displayableValue === undefined
-          ? props.wellPlate.getPosition(props.value, 'formatted')
-          : displayableValue}
-      </div>
-    </div>
+      <Text
+        style={[
+          styles.textStyle,
+          textColor ? { color: textColor } : {}, // Apply textColor here
+          customTextStyle, // Allow override of text styles
+        ]}
+      >
+        {displayableValue}
+      </Text>
+    </Pressable>
   );
 };
+
+const styles = StyleSheet.create({
+  baseWell: {
+    borderWidth: 1,
+    borderStyle: 'solid', // Solid is default in RN, but good to be explicit
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderColor: '#000', // Default border color, can be overridden by customStyle
+  },
+  textStyle: {
+    textAlign: 'center',
+    // Default text color can be set here if needed, e.g., color: '#000'
+    // It will be overridden by customStyle.color or customTextStyle.color
+  },
+});
 
 export default Well;
